@@ -1,0 +1,15 @@
+.input-file {
+  display: none;
+}
+
+.image-container {
+  display: flex;
+  align-items: flex-end;
+
+  .image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    margin-right: 15px;
+  }
+}

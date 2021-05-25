@@ -1,0 +1,59 @@
+version: '3'
+
+services:
+  mysqldb:
+    image: mysql
+    restart: always
+    env_file:
+      - ./graphql-server/.env
+    environment: 
+      MYSQL_ROOT_PASSWORD: root
+    cap_add:
+      - SYS_NICE
+    ports:
+      - ${MYSQL_LOCAL_PORT}:${MYSQL_DOCKER_PORT}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "mysqldb", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD" ]
+      interval: 10s
+      timeout: 2s
+      retries: 10
+
+  graphql_server:
+    build:
+      context: .
+      dockerfile: ./graphql-server/Dockerfile
+    image: graphql-server-app
+    env_file:
+      - ./graphql-server/.env
+    ports:
+      - ${NODE_LOCAL_PORT}:${NODE_DOCKER_PORT}
+    volumes:
+      - ./graphql-server:/graphql-server
+      - server_modules:/graphql-server/node_modules
+    depends_on:
+      - mysqldb
+    stdin_open: true
+    tty: true
+
+  graphql_client:
+    build:
+      context: .
+      dockerfile: ./graphql-client/Dockerfile
+    image: graphql-client-app
+    env_file: ./graphql-client/.env
+    ports:
+      - $CLIENT_PORT:$DOCKER_CLIENT_PORT
+    volumes:
+      - ./graphql-client:/graphql-client
+      - client_modules:/graphql-client/node_modules
+    depends_on:
+      - graphql_server
+    stdin_open: true
+    tty: true
+
+volumes:
+  db_data:
+  server_modules:
+  client_modules:

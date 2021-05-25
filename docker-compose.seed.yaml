@@ -1,0 +1,24 @@
+version: '3'
+
+services:
+  graphql_server:
+    build:
+      context: .
+      dockerfile: ./graphql-server/Dockerfile
+    image: graphql-server-app
+    command: >
+      bash -c "npx sequelize db:migrate
+      && npx sequelize db:seed:all
+      && npm run dev"
+    env_file:
+      - ./graphql-server/.env
+    ports:
+      - ${NODE_LOCAL_PORT}:${NODE_DOCKER_PORT}
+    volumes:
+      - ./graphql-server:/graphql-server
+      - server_modules:/graphql-server/node_modules
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+    stdin_open: true
+    tty: true
